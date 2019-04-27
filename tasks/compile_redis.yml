@@ -1,0 +1,35 @@
+---
+- name: check previous php redis build
+  stat:
+    path: /usr/local/src/phpredis/Makefile
+  register: redis_repo_dirty
+- name: make clean php redis
+  make:
+    target: clean
+  args:
+    chdir: /usr/local/src/phpredis
+  when: redis_repo_dirty.stat.exists
+- name: phpize php redis
+  become: no
+  command: phpize
+  args:
+    chdir: /usr/local/src/phpredis
+- name: configure php redis
+  become: no
+  command: ./configure
+  args:
+    chdir: /usr/local/src/phpredis
+- name: make php redis
+  become: no
+  make:
+    params:
+      MAKEFLAGS: -j{{ compile_threads }}
+      NUM_THREADS: "{{ compile_threads }}"
+  args:
+    chdir: /usr/local/src/phpredis
+- name: make install php redis
+  become: yes
+  make:
+    target: install
+  args:
+    chdir: /usr/local/src/phpredis

@@ -1,0 +1,40 @@
+---
+# tasks file for php-redis
+- name: clone php redis
+  become: yes
+  git:
+    repo: https://github.com/phpredis/phpredis.git
+    dest: /usr/local/src/phpredis
+    clone: yes
+    update: yes
+    version: "{{ php_redis_version }}"
+  register: php_redis_repo
+  retries: 3
+  delay: 10
+  until: not php_redis_repo.failed
+- name: change ownership of php redis folder to ssh user
+  become: yes
+  file:
+    path: /usr/local/src/phpredis
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: yes
+- name: get php extension dir for php redis
+  command: php-config --extension-dir
+  register: php_extension_dir
+- name: check redis exists
+  stat:
+    path: "{{ php_extension_dir.stdout }}/redis.so"
+  register: php_redis_check
+- import_tasks: compile_redis.yml
+  when: not php_redis_check.stat.exists or php_redis_repo.before != php_redis_repo.after
+- name: copy php redis config file
+  become: yes
+  template:
+    src: redis.ini
+    dest: /etc/php.d/redis.ini
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart php-fpm
