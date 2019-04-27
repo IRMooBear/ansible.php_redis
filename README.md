@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/IRMooBear/ansible.php_redis.svg?branch=master)](https://travis-ci.org/IRMooBear/ansible.php_redis)
+
 PHP Redis
 =========
 Download and compile the redis extension for PHP 7.
